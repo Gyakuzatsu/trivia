@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Trivia</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Partículas de fondo */
+    .particle {
+      position: fixed;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    .particle:nth-child(1) { width: 10px; height: 10px; top: 20%; left: 10%; animation-delay: 0s; }
+    .particle:nth-child(2) { width: 15px; height: 15px; top: 50%; left: 20%; animation-delay: 2s; }
+    .particle:nth-child(3) { width: 8px; height: 8px; top: 30%; left: 80%; animation-delay: 4s; }
+    .particle:nth-child(4) { width: 12px; height: 12px; top: 70%; left: 90%; animation-delay: 1s; }
+    .particle:nth-child(5) { width: 6px; height: 6px; top: 80%; left: 30%; animation-delay: 3s; }
+
+    
+    #menu {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 50px;
+      border-radius: 30px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+      max-width: 550px;
+      width: 90%;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.3);
+      animation: slideInUp 0.8s ease-out;
+    }
+
+    @keyframes slideInUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(50px) scale(0.9); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+      }
+    }
+
+    .titulo-menu {
+      font-size: 4em;
+      margin-bottom: 15px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 800;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.3)); }
+      to { filter: drop-shadow(0 0 20px rgba(118, 75, 162, 0.5)); }
+    }
+
+    .subtitulo-menu {
+      font-size: 1.4em;
+      margin-bottom: 40px;
+      color: #555;
+      font-weight: 300;
+      opacity: 0.8;
+    }
+
+    .select-container {
+      margin: 40px 0;
+    }
+
+    .select-label {
+      display: block;
+      font-size: 1.3em;
+      margin-bottom: 20px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    #cantidad {
+      font-size: 1.3em;
+      padding: 20px 25px;
+      border-radius: 20px;
+      border: 3px solid #e0e8ff;
+      background: white;
+      width: 100%;
+      transition: all 0.4s ease;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    #cantidad:focus {
+      border-color: #667eea;
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+      transform: translateY(-3px);
+    }
+
+    #cantidad:hover {
+      border-color: #764ba2;
+      transform: translateY(-2px);
+    }
+
+    .btn-jugar {
+      font-size: 1.8em;
+      font-weight: 700;
+      padding: 25px 60px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+      position: relative;
+      overflow: hidden;
+      margin-top: 30px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-jugar:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.6s;
+    }
+
+    .btn-jugar:hover:before {
+      left: 100%;
+    }
+
+    .btn-jugar:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 25px 50px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-jugar:active {
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    /* Contenedor de trivia */
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 50px;
+      border-radius: 30px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+      max-width: 800px;
+      width: 90%;
+      border: 1px solid rgba(255,255,255,0.3);
+      animation: fadeInScale 0.6s ease-out;
+    }
+
+    @keyframes fadeInScale {
+      from { 
+        opacity: 0; 
+        transform: scale(0.8); 
+      }
+      to { 
+        opacity: 1; 
+        transform: scale(1); 
+      }
+    }
+
+    #pregunta {
+      font-size: 2em;
+      font-weight: 600;
+      margin-bottom: 25px;
+      color: #333;
+      line-height: 1.4;
+      text-align: center;
+      padding: 30px;
+      background: linear-gradient(135deg, #f8f9ff, #e8edff);
+      border-radius: 20px;
+      border-left: 6px solid #667eea;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .categoria {
+      font-style: italic;
+      color: #667eea;
+      font-size: 1.3em;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 35px;
+      background: rgba(102, 126, 234, 0.1);
+      padding: 15px 30px;
+      border-radius: 25px;
+      display: inline-block;
+    }
+
+    /* Botones de respuesta */
+    .btn {
+      display: block;
+      margin: 20px 0;
+      padding: 25px 35px;
+      border: none;
+      background: linear-gradient(135deg, #f8f9ff, #ffffff);
+      color: #333;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 1.2em;
+      font-weight: 500;
+      transition: all 0.4s ease;
+      border: 3px solid #e0e8ff;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .btn:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+      transition: left 0.4s;
+    }
+
+    .btn:hover:before {
+      left: 100%;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+      border-color: #667eea;
+    }
+
+    .btn:active {
+      transform: translateY(-2px) scale(1.01);
+    }
+
+    /* Feedback */
+    #feedback {
+      font-size: 1.6em;
+      font-weight: 700;
+      text-align: center;
+      margin: 30px 0;
+      padding: 20px;
+      border-radius: 20px;
+      min-height: 25px;
+      transition: all 0.4s ease;
+    }
+
+    #feedback.correcto {
+      background: linear-gradient(135deg, #4ecdc4, #44a08d);
+      color: white;
+      box-shadow: 0 10px 25px rgba(78, 205, 196, 0.4);
+      animation: pulse 0.6s ease-in-out;
+    }
+
+    #feedback.incorrecto {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      color: white;
+      box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+      animation: shake 0.6s ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Botón de mute */
+    #muteBtn {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.8em;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      transition: all 0.4s ease;
+      z-index: 1000;
+    }
+
+    #muteBtn:hover {
+      transform: scale(1.1);
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    }
+
+    /* Resultados */
+    .resultados-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      color: #333;
+      border-radius: 30px;
+      padding: 50px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+      margin: 20px auto;
+      max-width: 800px;
+      width: 90%;
+      border: 1px solid rgba(255,255,255,0.3);
+      animation: fadeInScale 0.8s ease-out;
+    }
+
+    .titulo-resultados {
+      font-size: 3.5em;
+      margin-bottom: 30px;
+      text-align: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 800;
+    }
+
+    .categoria-resultado {
+      background: linear-gradient(135deg, #f8f9ff, #ffffff);
+      border: 3px solid #e0e8ff;
+      border-radius: 25px;
+      padding: 30px;
+      margin: 25px 0;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .categoria-resultado:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.05), transparent);
+      transition: left 0.6s;
+    }
+
+    .categoria-resultado:hover:before {
+      left: 100%;
+    }
+
+    .categoria-resultado:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+      border-color: #667eea;
+    }
+
+    .nombre-categoria {
+      font-size: 1.6em;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: #333;
+    }
+
+    .puntaje-categoria {
+      font-size: 2em;
+      font-weight: 800;
+      text-align: right;
+      color: #667eea;
+    }
+
+    .barra-progreso {
+      background: #e0e8ff;
+      border-radius: 15px;
+      height: 15px;
+      margin: 20px 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progreso-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 15px;
+      transition: width 2s ease-in-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progreso-fill:after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .puntaje-total {
+      background: linear-gradient(135deg, #ffd700, #ffed4e);
+      border-radius: 25px;
+      padding: 40px;
+      margin: 40px 0;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(255, 215, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .puntaje-total:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shimmer 3s infinite;
+    }
+
+    .puntaje-total h3 {
+      margin: 0 0 20px 0;
+      font-size: 1.8em;
+      color: #333;
+      font-weight: 700;
+    }
+
+    .puntaje-total .numero {
+      font-size: 3.5em;
+      font-weight: 800;
+      color: #333;
+      margin: 15px 0;
+    }
+
+    .btn-reiniciar {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      color: white;
+      border: none;
+      padding: 25px 50px;
+      font-size: 1.4em;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      box-shadow: 0 15px 35px rgba(238, 90, 82, 0.4);
+      margin: 40px auto;
+      display: block;
+      position: relative;
+      overflow: hidden;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-reiniciar:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.6s;
+    }
+
+    .btn-reiniciar:hover:before {
+      left: 100%;
+    }
+
+    .btn-reiniciar:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 25px 50px rgba(238, 90, 82, 0.6);
+    }
+
+    .icono-categoria {
+      font-size: 1.8em;
+      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #menu, .card, .resultados-container {
+        margin: 20px;
+        padding: 30px;
+      }
+      
+      .titulo-menu {
+        font-size: 2.5em;
+      }
+      
+      #pregunta {
+        font-size: 1.5em;
+        padding: 20px;
+      }
+      
+      .btn {
+        padding: 20px 25px;
+        font-size: 1.1em;
+      }
+
+      .btn-jugar {
+        font-size: 1.4em;
+        padding: 20px 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+<!-- Partículas de fondo -->
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+
+
+<audio id="musicaFondo" loop>
+  <source src="musica/Farewell.mp3" type="audio/mpeg">
+  Tu navegador no soporta audio HTML5.
+</audio>
+
+
+<button id="muteBtn">🔇</button>
+
+<div id="menu">
+  <h1 class="titulo-menu">🎮 Trivia</h1>
+  <p class="subtitulo-menu">¡Pon a prueba tus conocimientos!</p>
+  <div class="select-container">
+    <label for="cantidad" class="select-label">Número de preguntas:</label>
+    <select id="cantidad">
+      <option value="50">🔥 50 preguntas (10 por materia)</option>
+      <option value="100">💪 100 preguntas (20 por materia)</option>
+      <option value="175">🚀 175 preguntas (35 por materia)</option>
+      <option value="250">🏆 250 preguntas (50 por materia)</option>
+    </select>
+  </div>
+  <button id="btnJugar" class="btn-jugar">🎮 Comenzar Juego</button>
+</div>
+
+
+<div class="card" id="trivia" style="display:none;">
+  <h2 id="pregunta">Cargando pregunta...</h2>
+  <p class="categoria" id="categoria"></p>
+  <div id="respuestas"></div>
+  <p id="feedback"></p>
+  <p id="puntaje"></p>
+</div>
+
+<audio id="sonidoCorrecto" src="sonidos/correct.mp3"></audio>
+<audio id="sonidoIncorrecto" src="sonidos/incorrect.mp3"></audio>
+
+<script>
+const musica = document.getElementById("musicaFondo");
+const btnJugar = document.getElementById("btnJugar");
+const menu = document.getElementById("menu");
+const trivia = document.getElementById("trivia");
+const muteBtn = document.getElementById("muteBtn");
+
+let totalPreguntas = 50;
+let preguntas = [];
+let indice = 0;
+let puntajePorCategoria = {};
+let totalPorCategoria = {};
+
+
+btnJugar.addEventListener("click", () => {
+  totalPreguntas = parseInt(document.getElementById("cantidad").value);
+  
+  menu.style.display = "none";
+  trivia.style.display = "block";
+
+  musica.muted = false;
+  musica.volume = 0.5;
+  musica.play().catch(err => console.log("Error al reproducir:", err));
+
+  cargarPreguntas();
+});
+
+// Botón para mutear/desmutear
+muteBtn.addEventListener("click", () => {
+  if (musica.muted) {
+    musica.muted = false;
+    muteBtn.textContent = "🔊";
+  } else {
+    musica.muted = true;
+    muteBtn.textContent = "🔇";
+  }
+});
+
+async function cargarPreguntas() {
+  const res = await fetch("preguntas.php");
+  let todas = await res.json();
+
+  preguntas = [];
+  puntajePorCategoria = {};
+  totalPorCategoria = {};
+  indice = 0;
+
+  let categorias = ["Matemáticas", "Español", "Ciencias Naturales", "Sociales", "Inglés"];
+  let porCategoria = totalPreguntas / categorias.length;
+
+  categorias.forEach(cat => {
+    let preguntasCat = todas.filter(p => p.categoria === cat);
+    preguntasCat = preguntasCat.sort(() => Math.random() - 0.5);
+    preguntasCat = preguntasCat.slice(0, porCategoria);
+    preguntas = preguntas.concat(preguntasCat);
+    puntajePorCategoria[cat] = 0;
+    totalPorCategoria[cat] = preguntasCat.length;
+  });
+
+  preguntas = preguntas.sort(() => Math.random() - 0.5);
+  mostrarPregunta();
+}
+
+function mostrarPregunta() {
+  if (indice >= preguntas.length) {
+    mostrarResultadoFinal();
+    return;
+  }
+
+  const actual = preguntas[indice];
+  document.getElementById("pregunta").innerText = actual.texto;
+  document.getElementById("categoria").innerText = "📚 " + actual.categoria;
+  document.getElementById("feedback").innerText = "";
+  const contenedor = document.getElementById("respuestas");
+  contenedor.innerHTML = "";
+
+  
+  switch (actual.categoria) {
+    case "Español":
+      document.body.style.background = "linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%)";
+      break;
+    case "Matemáticas":
+      document.body.style.background = "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)";
+      break;
+    case "Ciencias Naturales":
+      document.body.style.background = "linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)";
+      break;
+    case "Sociales":
+      document.body.style.background = "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)";
+      break;
+    case "Inglés":
+      document.body.style.background = "linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%)";
+      break;
+    default:
+      document.body.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+  }
+
+  actual.respuestas.forEach((resp, index) => {
+    const btn = document.createElement("button");
+    btn.innerText = `${String.fromCharCode(65 + index)}) ${resp.texto}`;
+    btn.className = "btn";
+    btn.onclick = () => validar(resp.correcta, actual.categoria);
+    contenedor.appendChild(btn);
+  });
+}
+
+function validar(esCorrecta, categoria) {
+  const sonidoCorrecto = document.getElementById("sonidoCorrecto");
+  const sonidoIncorrecto = document.getElementById("sonidoIncorrecto");
+  const feedback = document.getElementById("feedback");
+
+  if (esCorrecta) {
+    feedback.innerText = "✅ ¡Correcto! Excelente trabajo";
+    feedback.className = "correcto";
+    if (sonidoCorrecto) {
+      sonidoCorrecto.currentTime = 0;
+      sonidoCorrecto.play().catch(err => console.log("No se pudo reproducir correcto:", err));
+    }
+    puntajePorCategoria[categoria]++;
+  } else {
+    feedback.innerText = "❌ Incorrecto. ¡Sigue intentando!";
+    feedback.className = "incorrecto";
+    if (sonidoIncorrecto) {
+      sonidoIncorrecto.currentTime = 0;
+      sonidoIncorrecto.play().catch(err => console.log("No se pudo reproducir incorrecto:", err));
+    }
+  }
+
+  setTimeout(() => {
+    feedback.innerText = "";
+    feedback.className = "";
+    indice++;
+    mostrarPregunta();
+  }, 1500);
+}
+
+function mostrarResultadoFinal() {
+  const trivia = document.getElementById("trivia");
+  
+  trivia.innerHTML = "";
+  
+  const resultadosContainer = document.createElement("div");
+  resultadosContainer.className = "resultados-container";
+  
+  const titulo = document.createElement("h1");
+  titulo.className = "titulo-resultados";
+  titulo.innerHTML = "🎉 ¡Juego Terminado!";
+  resultadosContainer.appendChild(titulo);
+  
+  let puntajeTotal = 0;
+  let totalPreguntas = 0;
+  for (const categoria in puntajePorCategoria) {
+    puntajeTotal += puntajePorCategoria[categoria];
+    totalPreguntas += totalPorCategoria[categoria];
+  }
+  
+  const puntajeTotalDiv = document.createElement("div");
+  puntajeTotalDiv.className = "puntaje-total";
+  puntajeTotalDiv.innerHTML = `
+    <h3>🏆 Puntaje Total</h3>
+    <div class="numero">${puntajeTotal} / ${totalPreguntas}</div>
+    <div>${Math.round((puntajeTotal/totalPreguntas)*100)}% de aciertos</div>
+  `;
+  resultadosContainer.appendChild(puntajeTotalDiv);
+  
+  const iconos = {
+    "Matemáticas": "🔢",
+    "Español": "📚", 
+    "Ciencias Naturales": "🔬",
+    "Sociales": "🌍",
+    "Inglés": "🇺🇸"
+  };
+  
+  for (const categoria in puntajePorCategoria) {
+    const categoriaDiv = document.createElement("div");
+    categoriaDiv.className = "categoria-resultado";
+    
+    const porcentaje = (puntajePorCategoria[categoria] / totalPorCategoria[categoria]) * 100;
+    
+    categoriaDiv.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="nombre-categoria">
+          <span class="icono-categoria">${iconos[categoria] || "📖"}</span>
+          ${categoria}
+        </div>
+        <div class="puntaje-categoria">
+          ${puntajePorCategoria[categoria]} / ${totalPorCategoria[categoria]}
+        </div>
+      </div>
+      <div class="barra-progreso">
+        <div class="progreso-fill" style="width: ${porcentaje}%"></div>
+      </div>
+      <div style="text-align: center; font-size: 1.1em; font-weight: 600; color: #667eea;">
+        ${Math.round(porcentaje)}% de aciertos
+      </div>
+    `;
+    
+    resultadosContainer.appendChild(categoriaDiv);
+  }
+  
+  const btnReiniciar = document.createElement("button");
+  btnReiniciar.className = "btn-reiniciar";
+  btnReiniciar.innerHTML = "🔄 Jugar de Nuevo";
+  btnReiniciar.onclick = () => {
+    location.reload();
+  };
+  resultadosContainer.appendChild(btnReiniciar);
+  
+  trivia.appendChild(resultadosContainer);
+  
+  document.body.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+}
+</script>
+
+</body>
+</html>
